@@ -36,7 +36,17 @@ Fork本项目<br>
 ![](doc/配置环境变量.png)
 将上一步的**四个值**<br>
 ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER，ALIYUN_REGISTRY_PASSWORD，ALIYUN_REGISTRY<br>
-配置成环境变量
+配置成环境变量，原来的这 **4 个 Secrets 仍然都需要**。<br>
+再新增 **2 个 Repository Secrets**：<br>
+- **IMAGE_PUSH_WEBHOOK_URL**：本 bot 的完整 webhook URL。
+- **IMAGE_PUSH_WEBHOOK_AUTHORIZATION**：从本 bot 面板复制的**完整请求头行**，必须整行粘贴；如果已含 `Authorization: ` 前缀，也原样保留，不要自行再加 `Authorization:` 或 `Bearer` 前缀。
+
+### 成功通知
+只有 images.txt 中全部镜像 pull/tag/push 成功后，才向 webhook 发送一次 JSON POST 成功通知。<br>
+任一镜像失败，或者上述 2 个新增 Secret 为空或缺失，job 都会失败，不发送 success 通知。<br>
+通知连接超时为 10 秒，每次请求最多 30 秒；非 2xx 或请求失败（含超时）最多尝试 3 次，间隔 1、2 秒。重试仍失败则 job 失败，不把该次当作成功通知；已推送的镜像不会回滚。<br>
+通知包含源镜像、完整目标引用、指定的平台及可靠取得的源 RepoDigest（无法确认则省略）。可用 payload 中的 **run_url** 或 GitHub Actions 运行页做人工核验。<br>
+重试、超时或重跑可能造成重复通知，接收方应使用 **run_id / run_attempt** 去重：同次尝试按二者组合去重；若跨重跑也只处理一次，则按 run_id 去重并记录 run_attempt。
 
 ### 添加镜像
 打开images.txt文件，添加你想要的镜像 
