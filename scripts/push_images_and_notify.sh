@@ -56,6 +56,8 @@ index=0
 while IFS= read -r line || [[ -n "$line" ]]; do
     [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
     parse_line
+    echo '开始处理镜像前的磁盘空间'
+    df -hT
     # Pass all whitespace-separated arguments, including --platform, without eval/globbing.
     run_docker pull "${pull_args[@]}"
     platform=""
